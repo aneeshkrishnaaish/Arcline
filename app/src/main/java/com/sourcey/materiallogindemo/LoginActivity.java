@@ -29,7 +29,6 @@ public class LoginActivity extends AppCompatActivity {
     private static final String URL_FOR_LOGIN = "https://learnapi.000webhostapp.com/Api/login_user.php";
     ProgressDialog progressDialog;
 
-
     private static final int REQUEST_SIGNUP = 0;
 
     @Bind(R.id.input_email) EditText _emailText;
@@ -42,7 +41,6 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
-
         // Progress dialog
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
@@ -143,6 +141,9 @@ public class LoginActivity extends AppCompatActivity {
         };
         // Adding request to request queue
         AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, TAG);
+        String password = _passwordText.getText().toString();
+
+        // TODO: Implement your own authentication logic here.
 
         new android.os.Handler().postDelayed(
                 new Runnable() {
@@ -162,7 +163,6 @@ public class LoginActivity extends AppCompatActivity {
         if (progressDialog.isShowing())
             progressDialog.dismiss();
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
