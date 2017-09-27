@@ -49,8 +49,8 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-//                login(_emailText.getText().toString(),
-//                        _passwordText.getText().toString());
+                login(_emailText.getText().toString(),
+                        _passwordText.getText().toString());
             }
         });
 
@@ -67,7 +67,7 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
-    public void login() {
+    public void login(String app_user_email, final String app_user_password) {
         Log.d(TAG, "Login");
 
         if (!validate()) {
@@ -81,14 +81,12 @@ public class LoginActivity extends AppCompatActivity {
                 R.style.AppTheme_Dark_Dialog);
         progressDialog.setIndeterminate(true);
         progressDialog.setMessage("Authenticating...");
-        progressDialog.show();
+        showDialog();
 
-        String email = _emailText.getText().toString();
-        final String password = _passwordText.getText().toString();
-
-        // TODO: Implement your own authentication logic here.
         StringRequest strReq = new StringRequest(Request.Method.POST,
                 URL_FOR_LOGIN, new Response.Listener<String>() {
+
+            // TODO: Implement your own authentication logic here.
 
             @Override
             public void onResponse(String response) {
@@ -133,15 +131,15 @@ public class LoginActivity extends AppCompatActivity {
             protected Map<String, String> getParams() {
                 // Posting params to login url
                 Map<String, String> params = new HashMap<String, String>();
-              /*  params.put("email", _emailText);
-                params.put("password", _passwordText);*/
+                params.put("app_user_email", app_user_email);
+                params.put("app_user_password", app_user_password);
                 return params;
             }
+            String app_user_email = _emailText.getText().toString();
 
         };
         // Adding request to request queue
         AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, TAG);
-//        String password = _passwordText.getText().toString();
 
         // TODO: Implement your own authentication logic here.
 
