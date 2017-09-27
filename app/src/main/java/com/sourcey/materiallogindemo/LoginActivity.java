@@ -12,11 +12,23 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
+
 import butterknife.ButterKnife;
 import butterknife.Bind;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
+    private static final String URL_FOR_LOGIN = "https://learnapi.000webhostapp.com/Api/login_user.php";
+    ProgressDialog progressDialog;
+
     private static final int REQUEST_SIGNUP = 0;
 
     @Bind(R.id.input_email) EditText _emailText;
@@ -29,12 +41,16 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ButterKnife.bind(this);
-        
+        // Progress dialog
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+
         _loginButton.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                login();
+                login(_emailText.getText().toString(),
+                        _passwordText.getText().toString());
             }
         });
 
@@ -68,6 +84,63 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog.show();
 
         String email = _emailText.getText().toString();
+        final String password = _passwordText.getText().toString();
+
+        // TODO: Implement your own authentication logic here.
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                URL_FOR_LOGIN, new Response.Listener<String>() {
+
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Register Response: " + response.toString());
+                hideDialog();
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
+
+                    if (!error) {
+                        String user = jObj.getJSONObject("user").getString("name");
+                        // Launch User activity
+                        Intent intent = new Intent(
+                                LoginActivity.this,
+                                UserActivity.class);
+                        intent.putExtra("username", user);
+                        startActivity(intent);
+                        finish();
+                    } else {
+
+                        String errorMsg = jObj.getString("error_msg");
+                        Toast.makeText(getApplicationContext(),
+                                errorMsg, Toast.LENGTH_LONG).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Login Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to login url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("email", email);
+                params.put("password", password);
+                return params;
+            }
+
+        };
+        // Adding request to request queue
+        AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, TAG);
         String password = _passwordText.getText().toString();
 
         // TODO: Implement your own authentication logic here.
@@ -82,7 +155,14 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 }, 3000);
     }
-
+    private void showDialog() {
+        if (!progressDialog.isShowing())
+            progressDialog.show();
+    }
+    private void hideDialog() {
+        if (progressDialog.isShowing())
+            progressDialog.dismiss();
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
