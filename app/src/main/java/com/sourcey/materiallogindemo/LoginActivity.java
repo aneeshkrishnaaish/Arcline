@@ -49,8 +49,8 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                login(_emailText.getText().toString(),
-                        _passwordText.getText().toString());
+//                login(_emailText.getText().toString(),
+//                        _passwordText.getText().toString());
             }
         });
 
@@ -133,15 +133,15 @@ public class LoginActivity extends AppCompatActivity {
             protected Map<String, String> getParams() {
                 // Posting params to login url
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("email", email);
-                params.put("password", password);
+              /*  params.put("email", _emailText);
+                params.put("password", _passwordText);*/
                 return params;
             }
 
         };
         // Adding request to request queue
         AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, TAG);
-        String password = _passwordText.getText().toString();
+//        String password = _passwordText.getText().toString();
 
         // TODO: Implement your own authentication logic here.
 
