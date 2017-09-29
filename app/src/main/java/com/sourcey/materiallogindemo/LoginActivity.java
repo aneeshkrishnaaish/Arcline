@@ -1,17 +1,15 @@
 package com.sourcey.materiallogindemo;
 
 import android.app.ProgressDialog;
-import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
-
-import android.content.Intent;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.content.Intent;
+import android.view.View;
 import android.widget.Toast;
-
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
@@ -21,72 +19,53 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-import butterknife.ButterKnife;
-import butterknife.Bind;
 
 public class LoginActivity extends AppCompatActivity {
+
     private static final String TAG = "LoginActivity";
-    private static final String URL_FOR_LOGIN = "https://learnapi.000webhostapp.com/Api/login_user.php";
+//    private static final String URL_FOR_LOGIN = "https://learnapi.000webhostapp.com/Api/login_user.php?";
+    private static final String URL_FOR_LOGIN = "https://learnapi.000webhostapp.com/Api/login_user.php?app_user_name=ajulal&app_user_pass=ajulal123";
     ProgressDialog progressDialog;
+    private EditText loginInputEmail, loginInputPassword;
+    private Button btnlogin;
+    private TextView btnLinkSignup;
 
-    private static final int REQUEST_SIGNUP = 0;
-
-    @Bind(R.id.input_email) EditText _emailText;
-    @Bind(R.id.input_password) EditText _passwordText;
-    @Bind(R.id.btn_login) Button _loginButton;
-    @Bind(R.id.link_signup) TextView _signupLink;
-    
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        ButterKnife.bind(this);
+        loginInputEmail = (EditText) findViewById(R.id.input_email);
+        loginInputPassword = (EditText) findViewById(R.id.input_password);
+        btnlogin = (Button) findViewById(R.id.btn_login);
+        btnLinkSignup = (TextView) findViewById(R.id.link_signup);
         // Progress dialog
         progressDialog = new ProgressDialog(this);
         progressDialog.setCancelable(false);
 
-        _loginButton.setOnClickListener(new View.OnClickListener() {
-
+        btnlogin.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                login(_emailText.getText().toString(),
-                        _passwordText.getText().toString());
+            public void onClick(View view) {
+                loginUser(loginInputEmail.getText().toString(),
+                        loginInputPassword.getText().toString());
             }
         });
 
-        _signupLink.setOnClickListener(new View.OnClickListener() {
-
+        btnLinkSignup.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                // Start the Signup activity
-                Intent intent = new Intent(getApplicationContext(), SignupActivity.class);
-                startActivityForResult(intent, REQUEST_SIGNUP);
-                finish();
-                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+            public void onClick(View view) {
+                Intent i = new Intent(getApplicationContext(), SignupActivity.class);
+                startActivity(i);
             }
         });
     }
 
-    public void login(String app_user_email, final String app_user_password) {
-        Log.d(TAG, "Login");
-
-        if (!validate()) {
-            onLoginFailed();
-            return;
-        }
-
-        _loginButton.setEnabled(false);
-
-        final ProgressDialog progressDialog = new ProgressDialog(LoginActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Authenticating...");
+    private void loginUser( final String email, final String password) {
+        // Tag used to cancel the request
+        String cancel_req_tag = "login";
+        progressDialog.setMessage("Logging you in...");
         showDialog();
-
         StringRequest strReq = new StringRequest(Request.Method.POST,
                 URL_FOR_LOGIN, new Response.Listener<String>() {
-
-            // TODO: Implement your own authentication logic here.
 
             @Override
             public void onResponse(String response) {
@@ -97,7 +76,7 @@ public class LoginActivity extends AppCompatActivity {
                     boolean error = jObj.getBoolean("error");
 
                     if (!error) {
-                        String user = jObj.getJSONObject("user").getString("name");
+                        String user = jObj.getJSONObject("user").getString("app_user_name");
                         // Launch User activity
                         Intent intent = new Intent(
                                 LoginActivity.this,
@@ -126,33 +105,19 @@ public class LoginActivity extends AppCompatActivity {
                 hideDialog();
             }
         }) {
-
             @Override
             protected Map<String, String> getParams() {
                 // Posting params to login url
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("app_user_email", app_user_email);
-                params.put("app_user_password", app_user_password);
+                params.put("app_user_name", email);
+                params.put("app_user_pass", password);
                 return params;
             }
-            String app_user_email = _emailText.getText().toString();
-
         };
         // Adding request to request queue
-        AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, TAG);
-
-        // TODO: Implement your own authentication logic here.
-
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
-                        // onLoginFailed();
-                        progressDialog.dismiss();
-                    }
-                }, 3000);
+        AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq,cancel_req_tag);
     }
+
     private void showDialog() {
         if (!progressDialog.isShowing())
             progressDialog.show();
@@ -162,55 +127,6 @@ public class LoginActivity extends AppCompatActivity {
             progressDialog.dismiss();
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_SIGNUP) {
-            if (resultCode == RESULT_OK) {
-
-                // TODO: Implement successful signup logic here
-                // By default we just finish the Activity and log them in automatically
-                this.finish();
-            }
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        // Disable going back to the MainActivity
-        moveTaskToBack(true);
-    }
-
-    public void onLoginSuccess() {
-        _loginButton.setEnabled(true);
-        finish();
-    }
-
-    public void onLoginFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
-
-        _loginButton.setEnabled(true);
-    }
-
-    public boolean validate() {
-        boolean valid = true;
-
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
-
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailText.setError("enter a valid email address");
-            valid = false;
-        } else {
-            _emailText.setError(null);
-        }
-
-        if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
-            _passwordText.setError("between 4 and 10 alphanumeric characters");
-            valid = false;
-        } else {
-            _passwordText.setError(null);
-        }
-
-        return valid;
-    }
 }
+
+

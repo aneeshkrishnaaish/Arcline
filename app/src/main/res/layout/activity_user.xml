@@ -18,6 +18,31 @@
         android:text="Hello, User"
         android:textStyle="bold"
         />
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_signup443"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:padding="25dp"
+        android:text="Add Account"/>
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_signup3"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:padding="25dp"
+        android:text="Update Account"/>
+    <android.support.v7.widget.AppCompatButton
+        android:id="@+id/btn_signup44"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:padding="25dp"
+        android:text="Delete Account"/>
+
     <Button
         android:layout_marginTop="50dp"
         android:id="@+id/logout_button"

@@ -1,8 +1,5 @@
 package com.sourcey.materiallogindemo;
 
-/**
- * Created by aneeshkrishna on 26/09/17.
- */
 
 import android.app.ProgressDialog;
 import android.content.Intent;
@@ -55,3 +52,5 @@ public class UserActivity extends AppCompatActivity {
         });
     }
 }
+
+
