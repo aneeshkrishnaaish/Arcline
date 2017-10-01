@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Arcline 1.0</string>
-
+    <string name="male">Male</string>
+    <string name="female">Female</string>
     <string name="hello_world">Arcline Constructions!</string>
     <string name="action_settings">Settings</string>
 </resources>

@@ -8,156 +8,155 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import org.json.JSONException;
+import org.json.JSONObject;
+import java.util.HashMap;
+import java.util.Map;
 
-import butterknife.ButterKnife;
-import butterknife.Bind;
 
 public class SignupActivity extends AppCompatActivity {
-    private static final String TAG = "SignupActivity";
 
-    @Bind(R.id.input_name) EditText _nameText;
-    @Bind(R.id.input_address) EditText _addressText;
-    @Bind(R.id.input_email) EditText _emailText;
-    @Bind(R.id.input_mobile) EditText _mobileText;
-    @Bind(R.id.input_password) EditText _passwordText;
-    @Bind(R.id.input_reEnterPassword) EditText _reEnterPasswordText;
-    @Bind(R.id.btn_signup) Button _signupButton;
-    @Bind(R.id.link_login) TextView _loginLink;
-    
+    private static final String TAG = "RegisterActivity";
+    private static final String URL_FOR_REGISTRATION = "https://learnapi.000webhostapp.com/Api/register_user.php?";
+//    private static final String URL_FOR_REGISTRATION = "https://learnapi.000webhostapp.com/Api/register_user.php?app_user_name=jisha&app_user_pass=jisha123&app_user_email=jisha@gmail.com&app_user_phone=7012406470&app_user_gender=female";
+    ProgressDialog progressDialog;
+
+    private EditText signupInputName, signupInputEmail, signupInputMobile, signupInputPassword;
+    private Button btnSignUp;
+    private TextView btnLinkLogin;
+    private RadioGroup genderRadioGroup;
+
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
-        ButterKnife.bind(this);
 
-        _signupButton.setOnClickListener(new View.OnClickListener() {
+        // Progress dialog
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+
+        signupInputName = (EditText) findViewById(R.id.input_name);
+        signupInputEmail = (EditText) findViewById(R.id.input_email);
+        signupInputMobile = (EditText) findViewById(R.id.input_mobile);
+        signupInputPassword = (EditText) findViewById(R.id.input_password);
+        genderRadioGroup = (RadioGroup) findViewById(R.id.gender_radio_group);
+        btnSignUp = (Button) findViewById(R.id.btn_signup);
+        btnLinkLogin = (TextView) findViewById(R.id.link_login);
+
+        btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                signup();
+            public void onClick(View view) {
+                submitForm();
             }
         });
-
-        _loginLink.setOnClickListener(new View.OnClickListener() {
+        btnLinkLogin.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                // Finish the registration screen and return to the Login activity
-                Intent intent = new Intent(getApplicationContext(),LoginActivity.class);
-                startActivity(intent);
-                finish();
-                overridePendingTransition(R.anim.push_left_in, R.anim.push_left_out);
+            public void onClick(View view) {
+
+                Intent i = new Intent(getApplicationContext(),LoginActivity.class);
+                startActivity(i);
             }
         });
     }
-    @Override
-    public void onBackPressed() {
-        moveTaskToBack(true);
+
+    private void submitForm() {
+
+        int selectedId = genderRadioGroup.getCheckedRadioButtonId();
+        String gender;
+        if(selectedId == R.id.female_radio_btn)
+            gender = "Female";
+        else
+            gender = "Male";
+
+        registerUser(signupInputName.getText().toString(),
+                signupInputEmail.getText().toString(),
+                signupInputMobile.getText().toString(),
+                signupInputPassword.getText().toString(),gender
+                );
     }
 
-    public void signup() {
-        Log.d(TAG, "Signup");
+    private void registerUser(final String name,  final String email, final String mobile ,final String password,
+                              final String gender) {
+        // Tag used to cancel the request
+        String cancel_req_tag = "register";
 
-        if (!validate()) {
-            onSignupFailed();
-            return;
-        }
+        progressDialog.setMessage("Adding you ...");
+        showDialog();
 
-        _signupButton.setEnabled(false);
+        StringRequest strReq = new StringRequest(Request.Method.POST,
+                URL_FOR_REGISTRATION, new Response.Listener<String>() {
 
-        final ProgressDialog progressDialog = new ProgressDialog(SignupActivity.this,
-                R.style.AppTheme_Dark_Dialog);
-        progressDialog.setIndeterminate(true);
-        progressDialog.setMessage("Creating Account...");
-        progressDialog.show();
+            @Override
+            public void onResponse(String response) {
+                Log.d(TAG, "Register Response: " + response.toString());
+                hideDialog();
 
-        String name = _nameText.getText().toString();
-        String address = _addressText.getText().toString();
-        String email = _emailText.getText().toString();
-        String mobile = _mobileText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
+                try {
+                    JSONObject jObj = new JSONObject(response);
+                    boolean error = jObj.getBoolean("error");
 
-        // TODO: Implement your own signup logic here.
+                    if (!error) {
+//                        String user = jObj.getJSONObject("user").getString("name");
+                        String user = name;
+                        Toast.makeText(getApplicationContext(), "Hi " + user +", You are successfully Added!", Toast.LENGTH_SHORT).show();
 
-        new android.os.Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        // On complete call either onSignupSuccess or onSignupFailed
-                        // depending on success
-                        onSignupSuccess();
-                        // onSignupFailed();
-                        progressDialog.dismiss();
+                        // Launch login activity
+                        Intent intent = new Intent(
+                                SignupActivity.this,
+                                LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+
+                        String errorMsg = jObj.getString("message");
+                        Toast.makeText(getApplicationContext(),errorMsg +", Error Occured!", Toast.LENGTH_LONG).show();
                     }
-                }, 3000);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }, new Response.ErrorListener() {
+
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e(TAG, "Registration Error: " + error.getMessage());
+                Toast.makeText(getApplicationContext(),
+                        error.getMessage(), Toast.LENGTH_LONG).show();
+                hideDialog();
+            }
+        }) {
+            @Override
+            protected Map<String, String> getParams() {
+                // Posting params to register url
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("app_user_name", name);
+                params.put("app_user_pass", password);
+                params.put("app_user_email", email);
+                params.put("app_user_phone", mobile);
+                params.put("app_user_gender", gender);
+                return params;
+            }
+        };
+        // Adding request to request queue
+        AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq, cancel_req_tag);
     }
 
-
-    public void onSignupSuccess() {
-        _signupButton.setEnabled(true);
-        setResult(RESULT_OK, null);
-        finish();
+    private void showDialog() {
+        if (!progressDialog.isShowing())
+            progressDialog.show();
     }
 
-    public void onSignupFailed() {
-        Toast.makeText(getBaseContext(), "Login failed", Toast.LENGTH_LONG).show();
-
-        _signupButton.setEnabled(true);
+    private void hideDialog() {
+        if (progressDialog.isShowing())
+            progressDialog.dismiss();
     }
 
-    public boolean validate() {
-        boolean valid = true;
-
-        String name = _nameText.getText().toString();
-        String address = _addressText.getText().toString();
-        String email = _emailText.getText().toString();
-        String mobile = _mobileText.getText().toString();
-        String password = _passwordText.getText().toString();
-        String reEnterPassword = _reEnterPasswordText.getText().toString();
-
-        if (name.isEmpty() || name.length() < 3) {
-            _nameText.setError("at least 3 characters");
-            valid = false;
-        } else {
-            _nameText.setError(null);
-        }
-
-        if (address.isEmpty()) {
-            _addressText.setError("Enter Valid Address");
-            valid = false;
-        } else {
-            _addressText.setError(null);
-        }
-
-
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailText.setError("enter a valid email address");
-            valid = false;
-        } else {
-            _emailText.setError(null);
-        }
-
-        if (mobile.isEmpty() || mobile.length()!=10) {
-            _mobileText.setError("Enter Valid Mobile Number");
-            valid = false;
-        } else {
-            _mobileText.setError(null);
-        }
-
-        if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
-            _passwordText.setError("between 4 and 10 alphanumeric characters");
-            valid = false;
-        } else {
-            _passwordText.setError(null);
-        }
-
-        if (reEnterPassword.isEmpty() || reEnterPassword.length() < 4 || reEnterPassword.length() > 10 || !(reEnterPassword.equals(password))) {
-            _reEnterPasswordText.setError("Password Do not match");
-            valid = false;
-        } else {
-            _reEnterPasswordText.setError(null);
-        }
-
-        return valid;
-    }
 }

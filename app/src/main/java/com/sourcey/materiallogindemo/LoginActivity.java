@@ -112,7 +112,9 @@ public class LoginActivity extends AppCompatActivity {
                 params.put("app_user_name", email);
                 params.put("app_user_pass", password);
                 return params;
+
             }
+
         };
         // Adding request to request queue
         AppSingleton.getInstance(getApplicationContext()).addToRequestQueue(strReq,cancel_req_tag);
